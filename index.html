@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RM ↔ OC Currency Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+        }
+
+        .converter {
+            padding: 40px;
+            background: #1a1a1a;
+        }
+
+        .inputs-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .result {
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            padding: 20px;
+            text-align: center;
+            font-size: 16px;
+            color: #999;
+            margin-top: 30px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier New', monospace;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+        }
+
+        .input-group {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #999;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            position: relative;
+        }
+
+        input[type="number"] {
+            flex: 1;
+            padding: 15px 40px 15px 20px;
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            color: #e0e0e0;
+            font-size: 18px;
+            transition: border-color 0.3s, background 0.3s;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Remove arrows from number input */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #4a4a4a;
+            background: #151515;
+        }
+
+        input[type="number"]::placeholder {
+            color: #444;
+        }
+
+        .currency-label {
+            font-weight: bold;
+            min-width: 50px;
+            font-size: 18px;
+            text-align: center;
+            background: #0a0a0a;
+            padding: 15px;
+            border: 1px solid #2a2a2a;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* RM currency gets green color */
+        #fromCurrency {
+            color: #4AFD27;
+        }
+
+        /* OC currency gets orange color */
+        #toCurrency {
+            color: #E65A22;
+        }
+
+        .clear-input-btn {
+            position: absolute;
+            right: 10px;
+            background: transparent;
+            border: none;
+            color: #666;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 5px 10px;
+            transition: color 0.3s;
+            display: none;
+        }
+
+        .clear-input-btn:hover {
+            color: #e0e0e0;
+        }
+
+        .clear-input-btn.visible {
+            display: block;
+        }
+
+        .swap-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            border: 1px solid #2a2a2a;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .swap-button::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            right: -1px;
+            bottom: -1px;
+            background: #2a2a2a;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: -1;
+        }
+
+        .swap-button:hover::before {
+            opacity: 1;
+        }
+
+        .swap-button:hover {
+            color: #fff;
+            border-color: #4a4a4a;
+        }
+
+        .swap-button:active {
+            transform: rotate(180deg);
+        }
+
+        .result {
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            padding: 20px;
+            text-align: center;
+            font-size: 16px;
+            color: #999;
+            margin-bottom: 30px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier New', monospace;
+        }
+
+        .history {
+            padding: 40px;
+            border-top: 1px solid #2a2a2a;
+            background: #111;
+        }
+
+        .history-list {
+            max-height: 400px;
+            overflow-y: auto;
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            padding: 20px;
+        }
+
+        .history-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .history-list::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+
+        .history-list::-webkit-scrollbar-thumb {
+            background: #2a2a2a;
+        }
+
+        .history-list::-webkit-scrollbar-thumb:hover {
+            background: #3a3a3a;
+        }
+
+        .history-item {
+            background: #1a1a1a;
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-left: 2px solid #2a2a2a;
+            transition: border-color 0.3s;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .history-item:hover {
+            border-left-color: #4a4a4a;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .history-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .history-item div:first-child {
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .history-time {
+            font-size: 11px;
+            color: #666;
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .clear-history {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: transparent;
+            color: #999;
+            border: 1px solid #2a2a2a;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .clear-history:hover {
+            background: #1a1a1a;
+            border-color: #4a4a4a;
+            color: #e0e0e0;
+        }
+
+        .empty-history {
+            text-align: center;
+            color: #666;
+            padding: 30px;
+            font-size: 14px;
+        }
+
+        .rate-info {
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            padding: 15px 20px;
+            margin-bottom: 30px;
+            font-size: 13px;
+            color: #999;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .rate-info strong {
+            color: #e0e0e0;
+        }
+
+        .edit-rates-btn {
+            padding: 5px 12px;
+            background: transparent;
+            color: #999;
+            border: 1px solid #2a2a2a;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+        }
+
+        .edit-rates-btn:hover {
+            background: #2a2a2a;
+            border-color: #4a4a4a;
+            color: #e0e0e0;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .modal-header {
+            background: #111;
+            padding: 20px 30px;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .modal-header h2 {
+            color: #fff;
+            font-size: 18px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .rate-input-group {
+            margin-bottom: 25px;
+        }
+
+        .rate-input-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: #999;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .rate-input-group input {
+            width: 100%;
+            padding: 15px 20px;
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            color: #e0e0e0;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .rate-input-group input:focus {
+            outline: none;
+            border-color: #4a4a4a;
+            background: #151515;
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            border-top: 1px solid #2a2a2a;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 10px 20px;
+            border: 1px solid #2a2a2a;
+            cursor: pointer;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+        }
+
+        .modal-btn-save {
+            background: #2a2a2a;
+            color: #e0e0e0;
+        }
+
+        .modal-btn-save:hover {
+            background: #3a3a3a;
+            border-color: #4a4a4a;
+        }
+
+        .modal-btn-cancel {
+            background: transparent;
+            color: #999;
+        }
+
+        .modal-btn-cancel:hover {
+            background: #1a1a1a;
+            border-color: #4a4a4a;
+            color: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="converter">
+            <div class="rate-info">
+                Exchange Rates: <strong>1 RM = <span id="rmRateDisplay">9.8</span></strong> | <strong>1 OC = <span id="ocRateDisplay">0.06</span></strong>
+                <button class="edit-rates-btn" id="editRatesBtn">Edit Rates</button>
+            </div>
+
+            <div class="inputs-container">
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="fromAmount">From:</label>
+                        <div class="input-wrapper">
+                            <span class="currency-label" id="fromCurrency">RM</span>
+                            <input type="number" id="fromAmount" placeholder="Enter amount" step="0.01" min="0">
+                            <button class="clear-input-btn" id="clearFromBtn">×</button>
+                        </div>
+                    </div>
+                    <button class="swap-button" id="swapBtn">⇅</button>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="toAmount">To:</label>
+                        <div class="input-wrapper">
+                            <span class="currency-label" id="toCurrency">OC</span>
+                            <input type="number" id="toAmount" placeholder="Result" readonly>
+                            <button class="clear-input-btn" id="clearToBtn">×</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="result" id="result">Enter an amount to convert</div>
+        </div>
+
+        <div class="history">
+            <div class="history-list" id="historyList">
+                <div class="empty-history">No conversions yet</div>
+            </div>
+            <button class="clear-history" id="clearHistoryBtn">Clear History</button>
+        </div>
+    </div>
+
+    <!-- Edit Rates Modal -->
+    <div class="modal" id="ratesModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Exchange Rates</h2>
+            </div>
+            <div class="modal-body">
+                <div class="rate-input-group">
+                    <label for="rmRateInput">RM Rate</label>
+                    <input type="number" id="rmRateInput" step="0.01" min="0" placeholder="Enter RM rate">
+                </div>
+                <div class="rate-input-group">
+                    <label for="ocRateInput">OC Rate</label>
+                    <input type="number" id="ocRateInput" step="0.01" min="0" placeholder="Enter OC rate">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-cancel" id="cancelRatesBtn">Cancel</button>
+                <button class="modal-btn modal-btn-save" id="saveRatesBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Exchange rates
+        let RATES = {
+            RM: 9.8,
+            OC: 0.06
+        };
+
+        // Load rates from localStorage
+        function loadRates() {
+            const savedRates = localStorage.getItem('exchangeRates');
+            if (savedRates) {
+                RATES = JSON.parse(savedRates);
+                updateRateDisplay();
+            }
+        }
+
+        // Save rates to localStorage
+        function saveRates() {
+            localStorage.setItem('exchangeRates', JSON.stringify(RATES));
+        }
+
+        // Update rate display in UI
+        function updateRateDisplay() {
+            document.getElementById('rmRateDisplay').textContent = RATES.RM;
+            document.getElementById('ocRateDisplay').textContent = RATES.OC;
+        }
+
+        // State management (similar to React useState concept)
+        let state = {
+            fromCurrency: 'RM',
+            toCurrency: 'OC',
+            history: [],
+            lastSavedValue: null,
+            lastSavedFromCurrency: null,
+            lastSavedToCurrency: null
+        };
+
+        // Load history from localStorage on page load
+        function loadHistory() {
+            const savedHistory = localStorage.getItem('conversionHistory');
+            if (savedHistory) {
+                state.history = JSON.parse(savedHistory);
+                renderHistory();
+            }
+        }
+
+        // Save history to localStorage
+        function saveHistory() {
+            localStorage.setItem('conversionHistory', JSON.stringify(state.history));
+        }
+
+        // Get DOM elements
+        const fromAmountInput = document.getElementById('fromAmount');
+        const toAmountInput = document.getElementById('toAmount');
+        const fromCurrencyLabel = document.getElementById('fromCurrency');
+        const toCurrencyLabel = document.getElementById('toCurrency');
+        const resultDiv = document.getElementById('result');
+        const swapBtn = document.getElementById('swapBtn');
+        const historyList = document.getElementById('historyList');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+        const clearFromBtn = document.getElementById('clearFromBtn');
+        const clearToBtn = document.getElementById('clearToBtn');
+
+        // Toggle clear button visibility
+        function toggleClearButton(input, button) {
+            if (input.value) {
+                button.classList.add('visible');
+            } else {
+                button.classList.remove('visible');
+            }
+        }
+
+        // Clear input fields
+        function clearFromInput() {
+            fromAmountInput.value = '';
+            toAmountInput.value = '';
+            resultDiv.textContent = 'Enter an amount to convert';
+            toggleClearButton(fromAmountInput, clearFromBtn);
+            toggleClearButton(toAmountInput, clearToBtn);
+        }
+
+        function clearToInput() {
+            toAmountInput.value = '';
+            toggleClearButton(toAmountInput, clearToBtn);
+        }
+
+        // Conversion logic
+        function convert(amount, from, to) {
+            if (from === to) return amount;
+            
+            // Convert to base (RM -> value, OC -> value)
+            // Then convert to target currency
+            if (from === 'RM') {
+                // RM to OC: amount * 9.8
+                return amount * RATES.RM;
+            } else {
+                // OC to RM: amount * 0.06
+                return amount * RATES.OC;
+            }
+        }
+
+        // Handle input change (calculation only, no history save)
+        function handleConvert(saveToHistory = false) {
+            const amount = parseFloat(fromAmountInput.value);
+            
+            // Update clear button visibility
+            toggleClearButton(fromAmountInput, clearFromBtn);
+            
+            if (isNaN(amount) || amount < 0) {
+                toAmountInput.value = '';
+                resultDiv.textContent = 'Enter a valid amount';
+                toggleClearButton(toAmountInput, clearToBtn);
+                return;
+            }
+
+            const result = convert(amount, state.fromCurrency, state.toCurrency);
+            toAmountInput.value = result.toFixed(2);
+            toggleClearButton(toAmountInput, clearToBtn);
+            
+            resultDiv.textContent = `${amount} ${state.fromCurrency} = ${result.toFixed(2)} ${state.toCurrency}`;
+
+            // Only add to history if explicitly requested AND value has changed
+            if (saveToHistory) {
+                const hasChanged = 
+                    state.lastSavedValue !== amount ||
+                    state.lastSavedFromCurrency !== state.fromCurrency ||
+                    state.lastSavedToCurrency !== state.toCurrency;
+                
+                if (hasChanged) {
+                    addToHistory(amount, state.fromCurrency, result, state.toCurrency);
+                    state.lastSavedValue = amount;
+                    state.lastSavedFromCurrency = state.fromCurrency;
+                    state.lastSavedToCurrency = state.toCurrency;
+                }
+            }
+        }
+
+        // Swap currencies
+        function handleSwap() {
+            // If there's a converted value, move it to the from input
+            if (toAmountInput.value) {
+                fromAmountInput.value = toAmountInput.value;
+            }
+            
+            // Swap state
+            [state.fromCurrency, state.toCurrency] = [state.toCurrency, state.fromCurrency];
+            
+            // Update UI
+            fromCurrencyLabel.textContent = state.fromCurrency;
+            toCurrencyLabel.textContent = state.toCurrency;
+            
+            // Recalculate if there's a value (without saving to history)
+            if (fromAmountInput.value) {
+                handleConvert(false);
+            }
+            
+            // Update clear button visibility
+            toggleClearButton(fromAmountInput, clearFromBtn);
+        }
+
+        // Add conversion to history
+        function addToHistory(fromAmount, fromCurrency, toAmount, toCurrency) {
+            const historyItem = {
+                id: Date.now(),
+                fromAmount,
+                fromCurrency,
+                toAmount,
+                toCurrency,
+                timestamp: new Date().toLocaleString()
+            };
+
+            // Add to beginning of array (most recent first)
+            state.history.unshift(historyItem);
+            
+            // Keep only last 20 conversions
+            if (state.history.length > 20) {
+                state.history = state.history.slice(0, 20);
+            }
+
+            saveHistory();
+            renderHistory();
+        }
+
+        // Render history list
+        function renderHistory() {
+            if (state.history.length === 0) {
+                historyList.innerHTML = '<div class="empty-history">No conversions yet</div>';
+                return;
+            }
+
+            historyList.innerHTML = state.history
+                .map(item => `
+                    <div class="history-item">
+                        <div>
+                            <strong>${item.fromAmount.toFixed(2)} ${item.fromCurrency}</strong> 
+                            → 
+                            <strong>${item.toAmount.toFixed(2)} ${item.toCurrency}</strong>
+                        </div>
+                        <div class="history-time">${item.timestamp}</div>
+                    </div>
+                `)
+                .join('');
+        }
+
+        // Clear history
+        function clearHistory() {
+            if (confirm('Are you sure you want to clear all conversion history?')) {
+                state.history = [];
+                localStorage.removeItem('conversionHistory');
+                renderHistory();
+            }
+        }
+
+        // Modal controls
+        const modal = document.getElementById('ratesModal');
+        const editRatesBtn = document.getElementById('editRatesBtn');
+        const cancelRatesBtn = document.getElementById('cancelRatesBtn');
+        const saveRatesBtn = document.getElementById('saveRatesBtn');
+        const rmRateInput = document.getElementById('rmRateInput');
+        const ocRateInput = document.getElementById('ocRateInput');
+
+        function openModal() {
+            rmRateInput.value = RATES.RM;
+            ocRateInput.value = RATES.OC;
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+        }
+
+        function saveNewRates() {
+            const newRmRate = parseFloat(rmRateInput.value);
+            const newOcRate = parseFloat(ocRateInput.value);
+
+            if (isNaN(newRmRate) || newRmRate <= 0) {
+                alert('Please enter a valid RM rate greater than 0');
+                return;
+            }
+
+            if (isNaN(newOcRate) || newOcRate <= 0) {
+                alert('Please enter a valid OC rate greater than 0');
+                return;
+            }
+
+            RATES.RM = newRmRate;
+            RATES.OC = newOcRate;
+            
+            saveRates();
+            updateRateDisplay();
+            closeModal();
+
+            // Recalculate current conversion if there's a value
+            if (fromAmountInput.value) {
+                handleConvert(false);
+            }
+        }
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Event listeners
+        fromAmountInput.addEventListener('input', () => handleConvert(false)); // Live calculation without saving
+        fromAmountInput.addEventListener('blur', () => {
+            if (fromAmountInput.value) {
+                handleConvert(true); // Save to history on blur
+            }
+        });
+        fromAmountInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && fromAmountInput.value) {
+                handleConvert(true); // Save to history on Enter
+            }
+        });
+        swapBtn.addEventListener('click', handleSwap);
+        clearHistoryBtn.addEventListener('click', clearHistory);
+        editRatesBtn.addEventListener('click', openModal);
+        cancelRatesBtn.addEventListener('click', closeModal);
+        saveRatesBtn.addEventListener('click', saveNewRates);
+        clearFromBtn.addEventListener('click', clearFromInput);
+        clearToBtn.addEventListener('click', clearToInput);
+
+        // Initialize
+        loadRates();
+        loadHistory();
+    </script>
+</body>
+</html>
