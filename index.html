@@ -123,12 +123,12 @@
         }
 
         /* RM currency gets green color */
-        #fromCurrency {
+        .currency-label[data-currency="RM"] {
             color: #4AFD27;
         }
 
         /* OC currency gets orange color */
-        #toCurrency {
+        .currency-label[data-currency="OC"] {
             color: #E65A22;
         }
 
@@ -469,7 +469,7 @@
                     <div class="input-group">
                         <label for="fromAmount">From:</label>
                         <div class="input-wrapper">
-                            <span class="currency-label" id="fromCurrency">RM</span>
+                            <span class="currency-label" id="fromCurrency" data-currency="RM">RM</span>
                             <input type="number" id="fromAmount" placeholder="Enter amount" step="0.01" min="0">
                             <button class="clear-input-btn" id="clearFromBtn">×</button>
                         </div>
@@ -481,7 +481,7 @@
                     <div class="input-group">
                         <label for="toAmount">To:</label>
                         <div class="input-wrapper">
-                            <span class="currency-label" id="toCurrency">OC</span>
+                            <span class="currency-label" id="toCurrency" data-currency="OC">OC</span>
                             <input type="number" id="toAmount" placeholder="Result" readonly>
                             <button class="clear-input-btn" id="clearToBtn">×</button>
                         </div>
@@ -670,9 +670,12 @@
             // Swap state
             [state.fromCurrency, state.toCurrency] = [state.toCurrency, state.fromCurrency];
             
-            // Update UI
+            // Update UI text and data attributes
             fromCurrencyLabel.textContent = state.fromCurrency;
+            fromCurrencyLabel.setAttribute('data-currency', state.fromCurrency);
+            
             toCurrencyLabel.textContent = state.toCurrency;
+            toCurrencyLabel.setAttribute('data-currency', state.toCurrency);
             
             // Recalculate if there's a value (without saving to history)
             if (fromAmountInput.value) {
